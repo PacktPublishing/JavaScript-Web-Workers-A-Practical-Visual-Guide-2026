@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head><title>JS Single-Threaded Blocking PROOF</title>
+<style>
+  button { padding: 10px 20px; margin: 10px; font-weight: bold; }
+  #status { font-size: 1.2em; margin: 20px 0; padding: 10px; border: 1px solid #ccc; }
+  #counter { font-size: 3em; font-weight: bold; color: #007bff; }
+  .disabled { background: #ccc; cursor: not-allowed; }
+</style>
+</head>
+<body>
+  <h1>🔒 Main Thread Blocking Demo</h1>
+  <p>Open DevTools Console & watch counter freeze!</p>
+  
+  <div id="counter">0</div>
+  
+  <button id="startBtn">▶️ START Blocking Loop</button>
+  <button id="stopBtn">⏹️ STOP (Won't Work!)</button>
+  
+  <div id="status">Ready - Click START to block main thread</div>
+
+  <script>
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const counterEl = document.getElementById('counter');
+    const statusEl = document.getElementById('status');
+    let count = 0;
+
+    // Counter that gets BLOCKED by main thread work
+    setInterval(() => {
+       counterEl.textContent = count++;
+    }, 100);
+
+    startBtn.addEventListener('click', () => {
+      console.log('🚫 Blocking main thread... (STOP button ignored!)');
+      statusEl.textContent = '🚫 MAIN THREAD BLOCKED! Counter frozen. STOP ignored. Refresh to reset.';
+      statusEl.style.background = '#ff6b6b';
+
+      let i = 0;
+      const startTime = performance.now(); // grab time stamp before counting
+      // lets count to 10 billion, just because its fun
+      while (i < 1e10) { // ~10-30s block depending on CPU
+        i++;
+      }
+
+      const endTime = performance.now();
+      console.log(`✅ Done in ${(endTime - startTime)/1000}s`);
+      const duration = ((endTime - startTime)/1000).toFixed(1);
+      statusEl.textContent = `✅ Finished in ${duration}s`;
+    });
+
+    stopBtn.addEventListener('click', () => {
+      console.log('🛑 STOP clicked... but ignored by blocked event loop!');
+      statusEl.textContent = '🛑 STOP ignored! Main thread busy with loop.';
+      statusEl.style.background = '#ffd93d';
+      // This NEVER executes until loop finishes due to single call stack
+    });
+  </script>
+</body>
+</html>
